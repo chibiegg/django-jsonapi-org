@@ -4,7 +4,7 @@ from distutils.core import setup
 
 
 setup(
-      name="jsonapi",
+      name="django-jsonapi-org",
       packages=["jsonapi"],
       version = "0.5.0",
       description="JSON API implementation for use with django",
