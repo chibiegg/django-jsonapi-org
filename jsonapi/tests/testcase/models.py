@@ -108,7 +108,7 @@ class ModelJSONAPITest(TestCase):
         pref_data_2 = {
                      "name":"架空2県",
                      "capital":"架空2市",
-                     "is_od":True,
+                     "is_od":False,
                      "population":200
                     }
         request = {
@@ -129,7 +129,7 @@ class ModelJSONAPITest(TestCase):
 
 
         pref_data_2["id"] = 49
-        pref_data_2["is_designated_by_ordinance"] = True
+        pref_data_2["is_designated_by_ordinance"] = False
         self.assertEqual(response["prefectures"][1], pref_data_2)
         self.assertTrue(Prefecture.objects.filter(id=49).exists())
 
