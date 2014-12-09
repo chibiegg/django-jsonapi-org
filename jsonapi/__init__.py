@@ -1,11 +1,13 @@
 # encoding=utf-8
+from collections import OrderedDict, Iterable
+from functools import update_wrapper
 import json
-from collections import OrderedDict,Iterable
+
+from django.db.models.query import QuerySet
 from django.http.response import HttpResponseNotAllowed, HttpResponse, Http404, \
     HttpResponseBadRequest
-from django.db.models.query import QuerySet
 from django.views.decorators.csrf import csrf_exempt
-from functools import update_wrapper
+
 
 class JSONAPI(object):
 
@@ -15,12 +17,12 @@ class JSONAPI(object):
 
     add_form = None
     change_form = None
-    
+
     content_type = "application/json"
-    
+
     metadata = {}
 
-    def wrap_view(self,view_func):
+    def wrap_view(self, view_func):
         return csrf_exempt(view_func)
 
     def get_urls(self):
@@ -49,7 +51,7 @@ class JSONAPI(object):
             # ADD
             return self.post_index(request)
         return HttpResponseNotAllowed("")
-    
+
     def request_item(self, request, id):
         if request.method == "GET":
             return self.get_item(request, id)
@@ -59,25 +61,25 @@ class JSONAPI(object):
             return self.delete_item(request, id)
         return HttpResponseNotAllowed("")
 
-    
+
     # 取得系
-    def get_index(self,request):
+    def get_index(self, request):
         items = self.get_items_for_request(request)
         return self.response(self._items_to_dict(items))
-    
-    def get_item(self,request,id):
+
+    def get_item(self, request, id):
         item = self.get_item_by_id(request, id)
         if item is None:
             raise Http404()
         return self.response(self._items_to_dict(item))
-    
+
     # ADD
-    def post_index(self,request):
+    def post_index(self, request):
 
         if self.add_form is None:
             # フォームが用意されていない場合には追加できない
             return HttpResponseNotAllowed("")
-        
+
         payload = self._get_json_payload(request)
         if payload is None or self.model_name not in payload:
             return HttpResponseBadRequest("Bad struct")
@@ -85,7 +87,7 @@ class JSONAPI(object):
         items_data = payload[self.model_name]
 
         FormClass = self.add_form
-        
+
         if not isinstance(items_data, (list, tuple)):
             # 全て配列にしておく
             items_data = [items_data]
@@ -113,24 +115,24 @@ class JSONAPI(object):
 
         # 保存したItemをレスポンスとして返す
         return self.response(self._items_to_dict(items))
-    
+
     def get_change_form(self, request, item, data):
         FormClass = self.change_form
         return FormClass(data, initial=item)
 
-    
+
     def put_item(self, request, id):
-        
+
         if self.change_form is None:
             # フォームが用意されていない場合には追加できない
             return HttpResponseNotAllowed("")
-        
+
         payload = self._get_json_payload(request)
         if payload is None or self.model_name not in payload:
             return HttpResponseBadRequest("Bad struct")
 
         item_data = payload[self.model_name]
-        if isinstance(item_data,(list,tuple)):
+        if isinstance(item_data, (list, tuple)):
             return HttpResponseBadRequest("Cannot Multiple Modify")
 
         # 編集前のオブジェクト
@@ -152,7 +154,7 @@ class JSONAPI(object):
 
         # 生成されたItemを結果として返す
         return self.response(self._items_to_dict(item))
-    
+
     def delete_item(self, request, id):
         # 削除前のオブジェクト
         item = self.get_item_by_id(request, id)
@@ -170,8 +172,8 @@ class JSONAPI(object):
         except ValueError:
             return None
         return payload
-    
-    
+
+
     """シリアライズ処理"""
     def _items_to_dict(self, items):
         d = OrderedDict()
@@ -183,8 +185,8 @@ class JSONAPI(object):
             item = items
             d[self.model_name] = self._item_to_dict(item)
         return d
-    
-    def _getattr(self,item,name):
+
+    def _getattr(self, item, name):
         value = item
         # 再帰的に値を参照する
         for f in name.split("__"):
@@ -198,7 +200,7 @@ class JSONAPI(object):
                 value = value()
         return value
 
-    def _item_to_dict(self,item):
+    def _item_to_dict(self, item):
         d = OrderedDict()
         for field in self.fields:
             value = item
@@ -213,10 +215,10 @@ class JSONAPI(object):
 
         return d
 
-    def response(self,data):
+    def response(self, data):
         if self.metadata and isinstance(data, dict):
             data["meta"] = self.metadata
-        response = HttpResponse(json.dumps(data,default=self.json_serialize),
+        response = HttpResponse(json.dumps(data, default=self.json_serialize),
                                 content_type=self.content_type)
         return response
 
@@ -225,21 +227,21 @@ class JSONAPI(object):
         if hasattr(obj, "isoformat"):
             return obj.isoformat()
         raise ValueError
-    
+
     """データ更新関係"""
     def process_add_items(self, request, forms):
         items = []
         for form in forms:
             items.append(form.cleaned_data)
         return items
-    
+
     def process_update_item(self, request, form):
         item = form.cleaned_data
         return item
-    
+
     def process_delete_item(self, request, item):
         return None
-    
+
     """データの取得関係"""
     def id_to_python(self, id_str):
         return int(id_str)
@@ -247,7 +249,7 @@ class JSONAPI(object):
     def get_items_for_request(self, request):
         """すべてのデータを返すメソッド"""
         raise NotImplementedError
-    
+
     def get_item_by_id(self, request, id):
         """IDで特定のデータを返すメソッド"""
         id = self.id_to_python(id)
