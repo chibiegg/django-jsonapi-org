@@ -1,13 +1,13 @@
 # encoding=utf-8
 
-from django import forms
+from jsonapi import forms
 from jsonapi.tests.dictdata import PrefectureData
 from jsonapi.tests.models import Prefecture
 
 class AddPrefectureForm(forms.Form):
-    
+
     id = forms.IntegerField(label="ID", required=False)
-    name = forms.CharField(label="名称",required=True)
+    name = forms.CharField(label="名称", required=True)
     capital = forms.CharField(label="県庁所在地", required=True)
     is_od = forms.BooleanField(label="政令指定都市かどうか", required=False)
     population = forms.IntegerField(label="人口", required=True)

@@ -15,12 +15,12 @@ class JST(datetime.tzinfo):
 
 
 class JSONAPITest(TestCase):
-    
+
     def setUp(self):
         from jsonapi.tests.views import PrefectureJSONAPI
         self.api = PrefectureJSONAPI()
         self.client = Client()
-    
+
     def test_date(self):
         d = datetime.date(2014, 10, 12)
         self.assertEqual(self.api.json_serialize(d), "2014-10-12", "Invalid serialize of `datetime.date` type.")
@@ -46,7 +46,7 @@ class JSONAPITest(TestCase):
         self.assertEqual(len(prefectures), 47)
         for i, pref in enumerate(prefectures):
             # Asseret Equal to OriginalData
-            for field in ("id", "name", "capital","is_od", "population"):
+            for field in ("id", "name", "capital", "is_od", "population"):
                 self.assertEqual(pref[field], original_prefectures[i][field])
 
             # Change Attribute Name
@@ -92,7 +92,7 @@ class JSONAPITest(TestCase):
         """対応しないリクエスト"""
         response = self.client.put("/prefectures/")
         self.assertEqual(response.status_code, 405, "Status Code is not 405")
-    
+
     def test_post_index_wo_form(self):
         """AddFormがないため 405 NotAllowed"""
         from jsonapi.tests.views import prefectures as prefectures_api
@@ -142,7 +142,7 @@ class JSONAPITest(TestCase):
         pref_data_2 = {
                      "name":"架空2県",
                      "capital":"架空2市",
-                     "is_od":True,
+                     "is_od":False,
                      "population":200
                     }
         request = {
@@ -161,7 +161,7 @@ class JSONAPITest(TestCase):
         self.assertEqual(response["prefectures"][0], pref_data_1)
 
         pref_data_2["id"] = 48
-        pref_data_2["is_designated_by_ordinance"] = True
+        pref_data_2["is_designated_by_ordinance"] = False
         self.assertEqual(response["prefectures"][1], pref_data_2)
 
 
